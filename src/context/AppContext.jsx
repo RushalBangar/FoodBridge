@@ -99,7 +99,15 @@ export const AppProvider = ({ children }) => {
         });
 
         const fetchedPosts = Array.from(docMap.values());
-        fetchedPosts.sort((a, b) => new Date(a.expiresAt) - new Date(b.expiresAt));
+        
+        // Smart Urgency Matching: 
+        // Lower score is better. 1 hour left adds 10 points. 1 km adds 1 point.
+        const getUrgencyScore = (post) => {
+          const hoursLeft = (new Date(post.expiresAt) - new Date()) / (1000 * 60 * 60);
+          return post.distance + (Math.max(0, hoursLeft) * 10);
+        };
+
+        fetchedPosts.sort((a, b) => getUrgencyScore(a) - getUrgencyScore(b));
         setPosts([...fetchedPosts]);
       }, (error) => {
         console.error("Firestore listener error (check your .env keys!):", error);

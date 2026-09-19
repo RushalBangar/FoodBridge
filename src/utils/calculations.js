@@ -11,9 +11,14 @@ export const calculateImpact = (posts) => {
   });
 
   // Approximate 1 meal = 0.4kg of food
+  const kgDiverted = parseFloat((meals * 0.4).toFixed(1));
+  // 1 kg of rescued food = ~2.5 kg of CO2e emissions avoided
+  const co2Avoided = parseFloat((kgDiverted * 2.5).toFixed(1));
+
   return {
     mealsSaved: meals,
-    kgDiverted: parseFloat((meals * 0.4).toFixed(1)),
+    kgDiverted,
+    co2Avoided,
     activeDonors: donors.size
   };
 };

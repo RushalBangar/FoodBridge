@@ -16,6 +16,8 @@ describe('calculateImpact', () => {
     expect(result.mealsSaved).toBe(60);
     // kg diverted = 60 * 0.4 = 24.0
     expect(result.kgDiverted).toBe(24.0);
+    // CO2 avoided = 24.0 * 2.5 = 60.0
+    expect(result.co2Avoided).toBe(60.0);
     // Unique donors = donor1, donor2, donor3 = 3
     expect(result.activeDonors).toBe(3);
   });
@@ -25,6 +27,7 @@ describe('calculateImpact', () => {
     
     expect(result.mealsSaved).toBe(0);
     expect(result.kgDiverted).toBe(0);
+    expect(result.co2Avoided).toBe(0);
     expect(result.activeDonors).toBe(0);
   });
 

@@ -28,11 +28,18 @@ const Dashboard = () => {
           </div>
         </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '16px' }}>
           <div className="card text-center" style={{ marginBottom: 0 }}>
             <div style={{ color: 'var(--text-secondary)', fontSize: '13px', textTransform: 'uppercase' }}>{t('kgDiverted')}</div>
             <div style={{ fontSize: '24px', fontWeight: '500', color: 'var(--color-accent)', marginTop: '8px' }}>
               {impactStats.kgDiverted.toLocaleString()}
+            </div>
+          </div>
+          
+          <div className="card text-center" style={{ marginBottom: 0 }}>
+            <div style={{ color: 'var(--text-secondary)', fontSize: '13px', textTransform: 'uppercase' }}>CO₂ Saved</div>
+            <div style={{ fontSize: '24px', fontWeight: '500', color: 'var(--color-success)', marginTop: '8px' }}>
+              {impactStats.co2Avoided.toLocaleString()} <span style={{fontSize: '12px'}}>kg</span>
             </div>
           </div>
           
