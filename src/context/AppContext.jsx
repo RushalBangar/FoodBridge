@@ -138,7 +138,7 @@ export const AppProvider = ({ children }) => {
       const newProfile = {
         name,
         role,
-        verified: true, // Auto verify for demo
+        verified: role === 'donor', // Donors auto-verified, NGOs need approval
         createdAt: new Date()
       };
       await setDoc(doc(db, "users", uid), newProfile);
@@ -187,6 +187,11 @@ export const AppProvider = ({ children }) => {
   };
 
   const claimPost = async (postId) => {
+    if (userProfile?.role === 'ngo' && !userProfile?.verified) {
+      alert("Your NGO account is pending verification. You cannot claim food yet.");
+      return;
+    }
+
     const listingRef = doc(db, "listings", postId);
     try {
       await runTransaction(db, async (transaction) => {
@@ -220,6 +225,16 @@ export const AppProvider = ({ children }) => {
     }
   };
 
+  const verifyNGO = async (uid) => {
+    try {
+      await updateDoc(doc(db, "users", uid), {
+        verified: true
+      });
+    } catch (e) {
+      console.error("Error verifying NGO:", e);
+    }
+  };
+
   return (
     <AppContext.Provider value={{ 
       posts, 
@@ -232,7 +247,8 @@ export const AppProvider = ({ children }) => {
       assignRole,
       signUp,
       logIn,
-      logOut
+      logOut,
+      verifyNGO
     }}>
       {children}
     </AppContext.Provider>

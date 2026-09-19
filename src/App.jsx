@@ -7,6 +7,7 @@ import DonorHome from './components/DonorHome';
 import FoodPostForm from './components/FoodPostForm';
 import FeedList from './components/FeedList';
 import Dashboard from './components/Dashboard';
+import AdminDashboard from './components/AdminDashboard';
 import { PieChart, List, Globe } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
@@ -65,6 +66,7 @@ const MainLayout = () => {
         <Route path="/feed" element={<FeedList />} />
         <Route path="/impact" element={<Dashboard />} />
         <Route path="/legal" element={<Legal />} />
+        <Route path="/admin" element={<AdminDashboard />} />
       </Routes>
 
       {/* Bottom Nav for NGO */}
