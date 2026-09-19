@@ -83,7 +83,7 @@ const Splash = () => {
       {/* Hero Section */}
       <div style={{ textAlign: 'center', paddingTop: '48px', paddingBottom: '32px' }}>
         <img 
-          src="/foodbridge_logo.jpg" 
+          src="/logo.jpg" 
           alt="FoodBridge Logo" 
           style={{ width: '120px', height: '120px', borderRadius: '50%', objectFit: 'cover', margin: '0 auto 24px', boxShadow: '0 8px 16px rgba(0,0,0,0.1)' }}
         />
