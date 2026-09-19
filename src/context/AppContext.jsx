@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, useMemo } from 'react';
 import { db, auth } from '../firebase';
 import { 
-  collection, query, onSnapshot, 
+  collection, query, onSnapshot, orderBy, startAt, endAt, 
   addDoc, doc, runTransaction, updateDoc, GeoPoint, getDoc, setDoc
 } from 'firebase/firestore';
 import { 
@@ -10,17 +10,9 @@ import {
   signInWithEmailAndPassword, 
   signOut 
 } from 'firebase/auth';
+import * as geofire from 'geofire-common';
 
 const AppContext = createContext();
-
-// Haversine distance helper
-function getDistanceKm(lat1, lon1, lat2, lon2) {
-  const R = 6371;
-  const dLat = (lat2 - lat1) * Math.PI / 180;
-  const dLon = (lon2 - lon1) * Math.PI / 180;
-  const a = Math.sin(dLat/2)**2 + Math.cos(lat1*Math.PI/180) * Math.cos(lat2*Math.PI/180) * Math.sin(dLon/2)**2;
-  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-}
 
 export const AppProvider = ({ children }) => {
   const [posts, setPosts] = useState([]);
@@ -61,36 +53,62 @@ export const AppProvider = ({ children }) => {
     }
   }, []);
 
-  // 3. Real-time Firebase Listener
+  // 3. Real-time Firebase Listener with Geohashing (50km radius)
   useEffect(() => {
     if (!userLocation) return; 
-    const q = query(collection(db, "listings"));
 
-    const unsubscribe = onSnapshot(q, (snapshot) => {
-      const fetchedPosts = snapshot.docs.map(docSnap => {
-        const data = docSnap.data();
-        let distance = 0;
-        if (data.location && typeof data.location.latitude !== 'undefined') {
-          distance = getDistanceKm(
-            userLocation.lat, userLocation.lng, 
-            data.location.latitude, data.location.longitude
-          );
-        }
-        return {
-          id: docSnap.id,
-          ...data,
-          distance: parseFloat(distance.toFixed(1)),
-          expiresAt: data.expiresAt ? data.expiresAt.toDate().toISOString() : new Date().toISOString()
-        };
+    const center = [userLocation.lat, userLocation.lng];
+    const radiusInM = 50 * 1000;
+    const bounds = geofire.geohashQueryBounds(center, radiusInM);
+
+    const unsubscribes = [];
+    const docMap = new Map();
+
+    for (const b of bounds) {
+      const q = query(
+        collection(db, "listings"), 
+        orderBy("geohash"), 
+        startAt(b[0]), 
+        endAt(b[1])
+      );
+
+      const unsub = onSnapshot(q, (snapshot) => {
+        snapshot.docChanges().forEach((change) => {
+          if (change.type === 'removed') {
+            docMap.delete(change.doc.id);
+          } else {
+            const data = change.doc.data();
+            if (data.location && typeof data.location.latitude !== 'undefined') {
+              const distanceInKm = geofire.distanceBetween(
+                [data.location.latitude, data.location.longitude], 
+                center
+              );
+              
+              // Only keep items strictly within the radius
+              if (distanceInKm * 1000 <= radiusInM) {
+                docMap.set(change.doc.id, {
+                  id: change.doc.id,
+                  ...data,
+                  distance: parseFloat(distanceInKm.toFixed(1)),
+                  expiresAt: data.expiresAt ? data.expiresAt.toDate().toISOString() : new Date().toISOString()
+                });
+              }
+            }
+          }
+        });
+
+        const fetchedPosts = Array.from(docMap.values());
+        fetchedPosts.sort((a, b) => new Date(a.expiresAt) - new Date(b.expiresAt));
+        setPosts([...fetchedPosts]);
+      }, (error) => {
+        console.error("Firestore listener error (check your .env keys!):", error);
       });
+      unsubscribes.push(unsub);
+    }
 
-      fetchedPosts.sort((a, b) => new Date(a.expiresAt) - new Date(b.expiresAt));
-      setPosts(fetchedPosts);
-    }, (error) => {
-      console.error("Firestore listener error (check your .env keys!):", error);
-    });
-
-    return () => unsubscribe();
+    return () => {
+      unsubscribes.forEach(unsub => unsub());
+    };
   }, [userLocation]);
 
   // 4. Dynamic Impact Stats
@@ -146,6 +164,7 @@ export const AppProvider = ({ children }) => {
   const addPost = async (postData) => {
     try {
       const { lat, lng } = userLocation || { lat: 40.7128, lng: -74.0060 };
+      const hash = geofire.geohashForLocation([lat, lng]);
       
       await addDoc(collection(db, "listings"), {
         donorId: auth.currentUser?.uid || "anonymous",
@@ -153,6 +172,7 @@ export const AppProvider = ({ children }) => {
         foodType: postData.foodType,
         quantity: postData.quantity,
         location: new GeoPoint(lat, lng),
+        geohash: hash,
         postedAt: new Date(),
         expiresAt: new Date(postData.expiresAt),
         status: "available",

@@ -1,15 +1,11 @@
-# Phase 1: Identity & Security Tasks
+# Phase 2: Scale & Location Tasks
 
-## 1. Email Authentication
-- [x] Remove auto-anonymous login from `firebase.js`
-- [x] Update `AppContext.jsx` with Email/Password auth functions
-- [x] Overhaul `Splash.jsx` to show a real Sign Up / Log In form (Email, Password, Role)
+## 1. Geohashing (geofire-common)
+- [x] Install `geofire-common` library
+- [x] Update `AppContext.jsx` addPost to generate and save a `geohash`
+- [x] Update `AppContext.jsx` listener to perform a true Firestore radius query (e.g., 50km radius) instead of fetching all
 
-## 2. Firestore Security Rules
-- [x] Write role-based security rules (donors can only create/edit their own, claims can only go forward)
-- [x] Provide rules to user for Firebase Console deployment
-
-## 3. Legal Pages
-- [x] Create `Legal.jsx` (Terms of Service & Privacy Policy)
-- [x] Add route to `App.jsx`
-- [x] Add footer links on Splash screen
+## 2. Server-Side Validation (Cloud Functions)
+- [x] Initialize Firebase Functions in the project
+- [x] Write an `onCreate` trigger to validate listings (quantity, expiry, required fields)
+- [x] Write rate limiting logic (max 5 posts per hour per UID)
