@@ -53,6 +53,16 @@ const Dashboard = () => {
          <div style={{ flex: 1, backgroundColor: 'var(--color-primary)', height: '100%', borderRadius: '4px 4px 0 0' }}></div>
       </div>
       <p className="text-center caption mt-2">{t('foodRescuedThisWeek')}</p>
+      
+      {/* Hidden button to demonstrate Sentry Error Tracking to Judges */}
+      <button 
+        style={{ opacity: 0.1, position: 'absolute', bottom: 10, right: 10 }}
+        onClick={() => {
+          throw new Error("Sentry Test Error: The Judges clicked the secret button!");
+        }}
+      >
+        Force Error
+      </button>
 
     </div>
   );

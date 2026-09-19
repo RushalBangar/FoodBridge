@@ -11,6 +11,7 @@ import {
   signOut 
 } from 'firebase/auth';
 import * as geofire from 'geofire-common';
+import { calculateImpact } from '../utils/calculations';
 
 const AppContext = createContext();
 
@@ -113,23 +114,7 @@ export const AppProvider = ({ children }) => {
 
   // 4. Dynamic Impact Stats
   const impactStats = useMemo(() => {
-    let meals = 0;
-    let donors = new Set();
-    
-    posts.forEach(p => {
-      if (p.status === 'picked_up') {
-        const quantityNum = parseInt(p.quantity.split(' ')[0]) || 0;
-        meals += quantityNum;
-      }
-      if (p.donorId) donors.add(p.donorId);
-    });
-
-    // Approximate 1 meal = 0.4kg
-    return {
-      mealsSaved: meals,
-      kgDiverted: parseFloat((meals * 0.4).toFixed(1)),
-      activeDonors: donors.size
-    };
+    return calculateImpact(posts);
   }, [posts]);
 
 

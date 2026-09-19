@@ -1,12 +1,12 @@
-# Phase 3: Verification & Operations
+# Phase 4: Polish & Growth Tasks
 
-## 1. NGO Verification Flow
-- [x] Update `AppContext.jsx` so new NGOs are marked `verified: false` by default
-- [x] Create an `AdminDashboard.jsx` screen that lists all unverified NGOs
-- [x] Add a function to approve NGOs (update their `verified` status to `true`)
-- [x] Restrict claiming food so that only `verified` NGOs can claim
-- [x] Add `/admin` route to `App.jsx`
+## 1. Automated Testing (Vitest/Jest)
+- [x] Install `vitest`, `jsdom`, and `@testing-library/react` (Vitest is the modern Jest for Vite apps)
+- [x] Create `src/utils/calculations.js` to extract impact logic for pure unit testing
+- [x] Write a test suite `src/utils/calculations.test.js` to prove the impact math and geohashing math works
+- [x] Add `test` script to `package.json`
 
-## 2. Operations (CI/CD & Monitoring)
-- [x] Note: Vercel already handles CI/CD for the frontend automatically on push to `main`.
-- [x] Skip Sentry (unless specifically requested) to keep the hackathon codebase clean.
+## 2. Error Monitoring (Sentry)
+- [x] Install `@sentry/react`
+- [x] Initialize Sentry in `src/main.jsx` with a placeholder/env DSN
+- [x] Add an intentional "Throw Error" hidden button (or just document it) so you can show the judges a real Sentry log
