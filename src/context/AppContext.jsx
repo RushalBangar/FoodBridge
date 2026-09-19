@@ -4,7 +4,12 @@ import {
   collection, query, onSnapshot, 
   addDoc, doc, runTransaction, updateDoc, GeoPoint, getDoc, setDoc
 } from 'firebase/firestore';
-import { onAuthStateChanged } from 'firebase/auth';
+import { 
+  onAuthStateChanged, 
+  createUserWithEmailAndPassword, 
+  signInWithEmailAndPassword, 
+  signOut 
+} from 'firebase/auth';
 
 const AppContext = createContext();
 
@@ -110,8 +115,7 @@ export const AppProvider = ({ children }) => {
   }, [posts]);
 
 
-  const assignRole = async (name, role) => {
-    if (!auth.currentUser) return;
+  const assignRole = async (name, role, uid) => {
     try {
       const newProfile = {
         name,
@@ -119,11 +123,24 @@ export const AppProvider = ({ children }) => {
         verified: true, // Auto verify for demo
         createdAt: new Date()
       };
-      await setDoc(doc(db, "users", auth.currentUser.uid), newProfile);
-      setUserProfile({ uid: auth.currentUser.uid, ...newProfile });
+      await setDoc(doc(db, "users", uid), newProfile);
+      setUserProfile({ uid, ...newProfile });
     } catch (e) {
       console.error("Error assigning role:", e);
     }
+  };
+
+  const signUp = async (email, password, name, role) => {
+    const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+    await assignRole(name, role, userCredential.user.uid);
+  };
+
+  const logIn = async (email, password) => {
+    await signInWithEmailAndPassword(auth, email, password);
+  };
+
+  const logOut = async () => {
+    await signOut(auth);
   };
 
   const addPost = async (postData) => {
@@ -192,7 +209,10 @@ export const AppProvider = ({ children }) => {
       impactStats,
       userLocation,
       userProfile,
-      assignRole
+      assignRole,
+      signUp,
+      logIn,
+      logOut
     }}>
       {children}
     </AppContext.Provider>

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAppContext } from '../context/AppContext';
 import { ChefHat, HeartHandshake, Leaf, ArrowRight, ArrowLeft } from 'lucide-react';
@@ -7,72 +7,127 @@ import { useTranslation } from 'react-i18next';
 const Splash = () => {
   const navigate = useNavigate();
   const { t } = useTranslation();
-  const { userProfile, assignRole } = useAppContext();
+  const { userProfile, signUp, logIn } = useAppContext();
   
   const [selectedRole, setSelectedRole] = useState(null); // 'donor' | 'ngo' | null
+  const [isLoginMode, setIsLoginMode] = useState(false);
+  
   const [nameInput, setNameInput] = useState('');
+  const [emailInput, setEmailInput] = useState('');
+  const [passwordInput, setPasswordInput] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [errorMsg, setErrorMsg] = useState('');
 
-  const handleRoleSelect = (role) => {
+  // Auto-redirect if already logged in
+  useEffect(() => {
     if (userProfile) {
-      // Already has a profile, just navigate
-      navigate(role === 'donor' ? '/donor' : '/feed');
-    } else {
-      // Prompt for name first
-      setSelectedRole(role);
+      navigate(userProfile.role === 'donor' ? '/donor' : '/feed');
+    }
+  }, [userProfile, navigate]);
+
+  const handleAuthSubmit = async (e) => {
+    e.preventDefault();
+    setErrorMsg('');
+    setIsSubmitting(true);
+    
+    try {
+      if (isLoginMode) {
+        await logIn(emailInput, passwordInput);
+        // Navigation happens automatically via useEffect above
+      } else {
+        if (!nameInput.trim()) {
+          throw new Error("Please provide a name.");
+        }
+        await signUp(emailInput, passwordInput, nameInput.trim(), selectedRole);
+        // Navigation happens automatically via useEffect above
+      }
+    } catch (error) {
+      console.error(error);
+      setErrorMsg(error.message);
+      setIsSubmitting(false);
     }
   };
 
-  const handleOnboardSubmit = async (e) => {
-    e.preventDefault();
-    if (!nameInput.trim()) return;
-    
-    setIsSubmitting(true);
-    await assignRole(nameInput.trim(), selectedRole);
-    setIsSubmitting(false);
-    
-    navigate(selectedRole === 'donor' ? '/donor' : '/feed');
-  };
-
-  if (selectedRole) {
+  // If a role is selected (Sign Up) or Login mode is active, show the form
+  if (selectedRole || isLoginMode) {
     return (
       <div className="animate-fade-in screen-content" style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
         <button 
-          onClick={() => setSelectedRole(null)} 
+          onClick={() => {
+            setSelectedRole(null);
+            setIsLoginMode(false);
+            setErrorMsg('');
+          }} 
           style={{ background: 'none', border: 'none', alignSelf: 'flex-start', cursor: 'pointer', marginBottom: '24px' }}
         >
           <ArrowLeft color="var(--text-secondary)" />
         </button>
 
         <h2 style={{ color: 'var(--color-primary)' }}>
-          {selectedRole === 'donor' ? 'Welcome, Donor!' : 'Welcome, Rescuer!'}
+          {isLoginMode ? 'Welcome Back!' : (selectedRole === 'donor' ? 'Welcome, Donor!' : 'Welcome, Rescuer!')}
         </h2>
         <p style={{ color: 'var(--text-secondary)', marginBottom: '32px' }}>
-          {selectedRole === 'donor' 
-            ? 'What is the name of your restaurant or organization?' 
-            : 'What is your name or the name of your NGO?'}
+          {isLoginMode ? 'Log in to continue' : 'Create an account to join the movement.'}
         </p>
 
-        <form onSubmit={handleOnboardSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+        {errorMsg && (
+          <div style={{ backgroundColor: 'var(--color-danger)', color: 'white', padding: '12px', borderRadius: '8px', marginBottom: '16px' }}>
+            {errorMsg}
+          </div>
+        )}
+
+        <form onSubmit={handleAuthSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+          {!isLoginMode && (
+            <div className="input-group">
+              <input 
+                type="text" 
+                placeholder={selectedRole === 'donor' ? "Restaurant / Org Name" : "Your Name / NGO Name"}
+                value={nameInput}
+                onChange={(e) => setNameInput(e.target.value)}
+                required
+              />
+            </div>
+          )}
           <div className="input-group">
             <input 
-              type="text" 
-              placeholder="e.g. Fresh Bites Cafe"
-              value={nameInput}
-              onChange={(e) => setNameInput(e.target.value)}
+              type="email" 
+              placeholder="Email Address"
+              value={emailInput}
+              onChange={(e) => setEmailInput(e.target.value)}
               required
-              autoFocus
+            />
+          </div>
+          <div className="input-group">
+            <input 
+              type="password" 
+              placeholder="Password"
+              value={passwordInput}
+              onChange={(e) => setPasswordInput(e.target.value)}
+              required
+              minLength={6}
             />
           </div>
           <button 
             type="submit" 
             className="btn btn-primary" 
-            style={{ padding: '16px' }}
+            style={{ padding: '16px', marginTop: '8px' }}
             disabled={isSubmitting}
           >
-            {isSubmitting ? 'Joining...' : 'Get Started'}
+            {isSubmitting ? 'Loading...' : (isLoginMode ? 'Log In' : 'Sign Up')}
           </button>
         </form>
+
+        <div style={{ textAlign: 'center', marginTop: '24px' }}>
+          <button 
+            onClick={() => {
+              setIsLoginMode(!isLoginMode);
+              setErrorMsg('');
+            }}
+            style={{ background: 'none', border: 'none', color: 'var(--color-primary)', fontWeight: '600', cursor: 'pointer' }}
+          >
+            {isLoginMode ? "Don't have an account? Sign Up" : "Already have an account? Log In"}
+          </button>
+        </div>
       </div>
     );
   }
@@ -96,20 +151,20 @@ const Splash = () => {
       {/* Role Selection */}
       <div style={{ padding: '0 20px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
         
-        <div className="card" style={{ cursor: 'pointer', border: '2px solid transparent', transition: 'all 0.2s' }} onClick={() => handleRoleSelect('donor')}>
+        <div className="card" style={{ cursor: 'pointer', border: '2px solid transparent', transition: 'all 0.2s' }} onClick={() => setSelectedRole('donor')}>
           <div className="flex-row" style={{ gap: '16px' }}>
             <div style={{ backgroundColor: 'rgba(31, 122, 84, 0.1)', padding: '12px', borderRadius: '50%', color: 'var(--color-primary)' }}>
               <ChefHat size={32} />
             </div>
             <div style={{ flex: 1 }}>
-              <h3 style={{ margin: '0 0 4px' }}>{t('iHaveFood')}</h3>
-              <p className="caption" style={{ margin: 0 }}>{t('iHaveFoodDesc')}</p>
+              <h3 style={{ margin: '0 0 4px' }}>{t('giveFood')}</h3>
+              <p className="caption" style={{ margin: 0 }}>{t('lightningFastDesc')}</p>
             </div>
             <ArrowRight color="var(--text-secondary)" />
           </div>
         </div>
 
-        <div className="card" style={{ cursor: 'pointer', border: '2px solid transparent', transition: 'all 0.2s' }} onClick={() => handleRoleSelect('ngo')}>
+        <div className="card" style={{ cursor: 'pointer', border: '2px solid transparent', transition: 'all 0.2s' }} onClick={() => setSelectedRole('ngo')}>
           <div className="flex-row" style={{ gap: '16px' }}>
             <div style={{ backgroundColor: 'rgba(232, 163, 61, 0.1)', padding: '12px', borderRadius: '50%', color: 'var(--color-secondary)' }}>
               <HeartHandshake size={32} />
@@ -122,6 +177,14 @@ const Splash = () => {
           </div>
         </div>
 
+        <button 
+          onClick={() => setIsLoginMode(true)}
+          className="btn btn-outline" 
+          style={{ width: '100%', padding: '12px', marginTop: '8px' }}
+        >
+          Already have an account? Log In
+        </button>
+
       </div>
 
       {/* Impact Stats */}
@@ -130,7 +193,14 @@ const Splash = () => {
           <Leaf size={24} />
         </div>
         <h3 style={{ color: 'var(--text-primary)', marginBottom: '8px' }}>{t('joinTheMovement')}</h3>
-        <p className="caption">{t('movementDesc')}</p>
+        <p className="caption" style={{ marginBottom: '32px' }}>{t('movementDesc')}</p>
+        
+        <div 
+          onClick={() => navigate('/legal')}
+          style={{ fontSize: '12px', color: 'var(--text-secondary)', cursor: 'pointer', textDecoration: 'underline' }}
+        >
+          Terms of Service & Privacy Policy
+        </div>
       </div>
 
     </div>

@@ -1,7 +1,8 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, useNavigate, useLocation } from 'react-router-dom';
-import { AppProvider } from './context/AppContext';
+import { AppProvider, useAppContext } from './context/AppContext';
 import Splash from './components/Splash';
+import { Legal } from './components/Legal';
 import DonorHome from './components/DonorHome';
 import FoodPostForm from './components/FoodPostForm';
 import FeedList from './components/FeedList';
@@ -13,6 +14,7 @@ const MainLayout = () => {
   const { t, i18n } = useTranslation();
   const navigate = useNavigate();
   const location = useLocation();
+  const { logOut, userProfile } = useAppContext();
 
   const isSplash = location.pathname === '/';
   const showBottomNav = location.pathname === '/feed' || location.pathname === '/impact';
@@ -24,19 +26,33 @@ const MainLayout = () => {
         <div className="top-nav">
           <h1 style={{ margin: 0, fontSize: '20px', color: 'var(--color-primary)' }}>FoodBridge</h1>
           
-          <div 
-            className="flex-row" 
-            style={{ color: 'var(--text-secondary)', fontSize: '13px', cursor: 'pointer', background: 'rgba(0,0,0,0.05)', padding: '4px 8px', borderRadius: '12px' }}
-            onClick={() => {
-              const langs = ['EN', 'HI', 'MR'];
-              const nextIndex = (langs.indexOf(i18n.language) + 1) % langs.length;
-              i18n.changeLanguage(langs[nextIndex]);
-            }}
-          >
-            <Globe size={16} />
-            <span style={{ fontWeight: i18n.language === 'EN' ? 'bold' : 'normal' }}>EN</span> / 
-            <span style={{ fontWeight: i18n.language === 'HI' ? 'bold' : 'normal', marginLeft: '4px' }}>HI</span> / 
-            <span style={{ fontWeight: i18n.language === 'MR' ? 'bold' : 'normal', marginLeft: '4px' }}>MR</span>
+          <div className="flex-row" style={{ gap: '16px' }}>
+            <div 
+              className="flex-row" 
+              style={{ color: 'var(--text-secondary)', fontSize: '13px', cursor: 'pointer', background: 'rgba(0,0,0,0.05)', padding: '4px 8px', borderRadius: '12px' }}
+              onClick={() => {
+                const langs = ['EN', 'HI', 'MR'];
+                const nextIndex = (langs.indexOf(i18n.language) + 1) % langs.length;
+                i18n.changeLanguage(langs[nextIndex]);
+              }}
+            >
+              <Globe size={16} />
+              <span style={{ fontWeight: i18n.language === 'EN' ? 'bold' : 'normal' }}>EN</span> / 
+              <span style={{ fontWeight: i18n.language === 'HI' ? 'bold' : 'normal', marginLeft: '4px' }}>HI</span> / 
+              <span style={{ fontWeight: i18n.language === 'MR' ? 'bold' : 'normal', marginLeft: '4px' }}>MR</span>
+            </div>
+
+            {userProfile && (
+              <div 
+                style={{ fontSize: '14px', color: 'var(--color-danger)', cursor: 'pointer', fontWeight: '500' }}
+                onClick={async () => {
+                  await logOut();
+                  navigate('/');
+                }}
+              >
+                Log out
+              </div>
+            )}
           </div>
         </div>
       )}
@@ -48,6 +64,7 @@ const MainLayout = () => {
         <Route path="/post" element={<FoodPostForm />} />
         <Route path="/feed" element={<FeedList />} />
         <Route path="/impact" element={<Dashboard />} />
+        <Route path="/legal" element={<Legal />} />
       </Routes>
 
       {/* Bottom Nav for NGO */}

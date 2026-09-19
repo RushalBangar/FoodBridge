@@ -1,8 +1,15 @@
-# Auth & Roles Integration Tasks
+# Phase 1: Identity & Security Tasks
 
-- [x] Update `AppContext.jsx` with `userProfile` state and auth listener
-- [x] Implement `assignRole(name, role)` in `AppContext.jsx`
-- [x] Implement dynamic `impactStats` calculation based on `picked_up` posts
-- [x] Update `Splash.jsx` to show Name/Org prompt for first-time users
-- [x] Update `FoodPostForm.jsx` to use `userProfile.name`
-- [x] Update `Dashboard.jsx` to render dynamic stats
+## 1. Email Authentication
+- [x] Remove auto-anonymous login from `firebase.js`
+- [x] Update `AppContext.jsx` with Email/Password auth functions
+- [x] Overhaul `Splash.jsx` to show a real Sign Up / Log In form (Email, Password, Role)
+
+## 2. Firestore Security Rules
+- [x] Write role-based security rules (donors can only create/edit their own, claims can only go forward)
+- [x] Provide rules to user for Firebase Console deployment
+
+## 3. Legal Pages
+- [x] Create `Legal.jsx` (Terms of Service & Privacy Policy)
+- [x] Add route to `App.jsx`
+- [x] Add footer links on Splash screen

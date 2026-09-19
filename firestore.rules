@@ -1,0 +1,50 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Users can read any user profile, but only write their own
+    match /users/{userId} {
+      allow read: if request.auth != null;
+      allow write: if request.auth.uid == userId;
+    }
+
+    // Listings rules
+    match /listings/{listingId} {
+      // Anyone logged in can read listings
+      allow read: if request.auth != null;
+      
+      // Only donors can create listings, and they must set themselves as the donorId
+      allow create: if request.auth != null 
+                    && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'donor'
+                    && request.resource.data.donorId == request.auth.uid;
+      
+      // Updates
+      allow update: if request.auth != null 
+                    && (
+                      // 1. The donor is editing their own listing
+                      request.resource.data.donorId == request.auth.uid 
+                      
+                      || 
+                      
+                      // 2. An NGO is claiming an available listing
+                      (
+                        resource.data.status == 'available' && 
+                        request.resource.data.status == 'claimed' &&
+                        request.resource.data.claimedBy == request.auth.uid
+                      )
+                      
+                      ||
+
+                      // 3. The claiming NGO or Donor is marking it picked up
+                      (
+                        resource.data.status == 'claimed' &&
+                        request.resource.data.status == 'picked_up' &&
+                        (resource.data.claimedBy == request.auth.uid || resource.data.donorId == request.auth.uid)
+                      )
+                    );
+                    
+      // Only the owner can delete their listing
+      allow delete: if request.auth != null && resource.data.donorId == request.auth.uid;
+    }
+  }
+}
