@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Routes, Route, useNavigate, useLocation } from
 import { AppProvider, useAppContext } from './context/AppContext';
 import Splash from './components/Splash';
 import { Legal } from './components/Legal';
+import LandingPage from './components/LandingPage';
 import DonorHome from './components/DonorHome';
 import FoodPostForm from './components/FoodPostForm';
 import FeedList from './components/FeedList';
@@ -17,13 +18,15 @@ const MainLayout = () => {
   const location = useLocation();
   const { logOut, userProfile } = useAppContext();
 
-  const isSplash = location.pathname === '/';
+  const isLanding = location.pathname === '/';
+  const isLogin = location.pathname === '/login';
+  const showTopNav = !isLanding && !isLogin;
   const showBottomNav = location.pathname === '/feed' || location.pathname === '/impact';
 
   return (
-    <div className="app-container">
-      {/* Top Nav for non-splash screens */}
-      {!isSplash && (
+    <div className={isLanding ? '' : 'app-container'}>
+      {/* Top Nav for app screens (not landing or login) */}
+      {showTopNav && (
         <div className="top-nav">
           <h1 style={{ margin: 0, fontSize: '20px', color: 'var(--color-primary)' }}>FoodBridge</h1>
           
@@ -60,7 +63,8 @@ const MainLayout = () => {
 
       {/* Main Content Area */}
       <Routes>
-        <Route path="/" element={<Splash />} />
+        <Route path="/" element={<LandingPage />} />
+        <Route path="/login" element={<Splash />} />
         <Route path="/donor" element={<DonorHome />} />
         <Route path="/post" element={<FoodPostForm />} />
         <Route path="/feed" element={<FeedList />} />
