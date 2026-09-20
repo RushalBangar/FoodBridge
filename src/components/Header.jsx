@@ -1,6 +1,5 @@
 import React from 'react';
 import { useAppContext } from '../context/AppContext';
-import { Leaf } from 'lucide-react';
 
 const Header = () => {
   const { userType, toggleUserType } = useAppContext();
