@@ -18,7 +18,7 @@ const MainLayout = () => {
   const showTopNav = !isLanding && !isLogin;
 
   return (
-    <div className="app-container">
+    <div className="w-full min-h-screen flex flex-col">
       {showTopNav && <TopNav />}
       {/* Main Content Area */}
       <Routes>
